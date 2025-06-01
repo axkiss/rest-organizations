@@ -1,0 +1,33 @@
+version: "3.8"
+
+x-app_environment: &app_app_environment
+  environment:
+    - DATABASE__PASSWORD
+    - API_ACCESS_KEY
+
+services:
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    entrypoint:
+      - ./entrypoint.sh
+    command: poetry run fastapi dev main.py --host 0.0.0.0 --reload
+    ports:
+      - 8000:8000
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+    <<: *app_app_environment
+
+  db:
+    image: postgres:17.0-alpine
+    restart: unless-stopped
+    volumes:
+      - postgresdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: ${DATABASE__PASSWORD}
+
+volumes:
+  postgresdata:
